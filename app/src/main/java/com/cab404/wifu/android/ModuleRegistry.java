@@ -32,7 +32,7 @@ public class ModuleRegistry {
     private static final String MKEY_MODULE_CLASS = "WifuModule-Class";
     private static final String MKEY_UPDATE_URL = "WifuModule-UpdateUrl";
     private static final String MKEY_VERSION_URL = "WifuModule-VersionUrl";
-    private static final String DESC_FILE = "META-INF/WIFU-DESC.TXT";
+    private static final String DESC_FILE = "description.txt";
     private static ModuleRegistry instance = new ModuleRegistry();
 
     public static ModuleRegistry getInstance() {
