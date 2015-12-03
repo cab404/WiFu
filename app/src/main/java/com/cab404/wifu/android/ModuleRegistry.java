@@ -1,22 +1,21 @@
 package com.cab404.wifu.android;
 
+import com.cab404.wifu.base.WifiLoginModule;
+import com.cab404.wifu.modules.MetroConnect;
+import com.cab404.wifu.modules.MgupiConnect;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-
-import com.cab404.wifu.base.WifiLoginModule;
-import com.cab404.wifu.modules.MetroConnect;
-import com.cab404.wifu.modules.MgupiConnect;
 
 /**
  * Contains methods of connecting to network
@@ -59,6 +58,7 @@ public class ModuleRegistry {
         public String info;
         public int version;
     }
+
     public static class ModuleLoadInfo {
         enum LoadStatus {
             SUCCESS,
@@ -80,7 +80,6 @@ public class ModuleRegistry {
             jar_urls[i] = jars[i].toURI().toURL();
 
         final URLClassLoader classLoader = new URLClassLoader(jar_urls);
-        final CharBuffer buffer = CharBuffer.allocate(300);
         final List<ModuleLoadInfo> loadData = new ArrayList<>(jars.length);
 
         for (File jarFile : jars) {
@@ -157,11 +156,10 @@ public class ModuleRegistry {
                         new InputStreamReader(jar.getInputStream(descriptionFile))
                 );
 
-                buffer.clear();
-                while (reader.read(buffer) != -1) {
-                    description.append(buffer);
-                    buffer.rewind();
-                }
+                String line;
+                while ((line = reader.readLine()) != null)
+                    description.append(line).append('\n');
+                reader.close();
 
                 plugin.info = description.toString();
             }
