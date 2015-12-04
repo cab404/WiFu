@@ -10,9 +10,9 @@ import com.cab404.wifu.base.WifiLoginModule;
  *
  * @author cab404
  */
-public class Log implements WifiLoginModule.Log{
+public class WifiLog implements WifiLoginModule.Log{
 
-    public Log() {
+    public WifiLog() {
     }
 
     @Override
