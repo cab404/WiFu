@@ -2,6 +2,7 @@ package com.cab404.wifu.android;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -10,6 +11,7 @@ import android.widget.Toast;
 import com.cab404.wifu.R;
 import com.cab404.wifu.base.WifiLoginModule;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -18,7 +20,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * Oatmeal, sir.
+ * «Oatmeal, sir.»
+ * <p/>
+ * Basically, that's central coordination center of everything.
+ * It receives network status changes, as well as performing initialization.
  *
  * @author cab404
  */
@@ -46,7 +51,11 @@ public class Butler {
             @Override
             public void run() {
                 Log.v(TAG, "Repeat delay has passed, relaunching ");
-                module.handle(info, log);
+                try {
+                    module.handle(info, log);
+                } catch (Exception e) {
+                    Log.e(TAG, "Module " + module.getClass() + " had failed with exception", e);
+                }
             }
         };
         scheduled.schedule(
@@ -74,7 +83,6 @@ public class Butler {
             final List<WifiLoginModule> ways = new LinkedList<>();
             for (WifiLoginModule way : ModuleRegistry.getInstance().getModules())
                 if (way.canHandle(info) > 0)
-
                     ways.add(way);
 
             if (ways.isEmpty()) {
@@ -104,7 +112,11 @@ public class Butler {
                     while (!ways.isEmpty()) {
                         final WifiLoginModule top = ways.remove(0);
                         Log.v(TAG, "Checking " + top.getClass());
-                        if (handle = (module = top).handle(info, wifiLog)) break;
+                        try {
+                            if (handle = (module = top).handle(info, wifiLog)) break;
+                        } catch (Exception e) {
+                            Log.e(TAG, "Module " + top.getClass() + " had failed with exception", e);
+                        }
                     }
                     if (module == null) {
                         Log.v(TAG, "No module found for handling " + info.ssid() + ", assuming that is fine.");
@@ -138,5 +150,11 @@ public class Butler {
                 }
             }).start();
         }
+    }
+
+    public void initialize(Context ctx) {
+        final File file = new File(Environment.getExternalStorageDirectory(), "WiFu Plugins");
+        file.mkdir();
+        ModuleRegistry.getInstance().loadModule(file.listFiles());
     }
 }

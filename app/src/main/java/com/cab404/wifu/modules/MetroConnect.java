@@ -25,7 +25,7 @@ public class MetroConnect implements WifiLoginModule {
         try {
 
             // Fetching redirect page
-            HttpURLConnection o = (HttpURLConnection) new URL("http://ya.ru/aof").openConnection();
+            HttpURLConnection o = (HttpURLConnection) new URL("http://ya.ru/404").openConnection();
             o.setUseCaches(false);
             o.setDefaultUseCaches(false);
             o.connect();
@@ -37,7 +37,7 @@ public class MetroConnect implements WifiLoginModule {
             URL base = new URL(location);
 
             // Fetching main page with csrf code
-            HttpsURLConnection main_page = (HttpsURLConnection) base.openConnection();
+            HttpURLConnection main_page = (HttpURLConnection) base.openConnection();
             main_page.addRequestProperty("Host", "login.wi-fi.ru");
             main_page.addRequestProperty("Cookie", "device=desktop");
             main_page.connect();

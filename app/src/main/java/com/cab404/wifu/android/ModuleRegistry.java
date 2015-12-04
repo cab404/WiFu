@@ -1,13 +1,14 @@
 package com.cab404.wifu.android;
 
+import android.util.Log;
+
 import com.cab404.wifu.base.WifiLoginModule;
-import com.cab404.wifu.modules.MetroConnect;
-import com.cab404.wifu.modules.MgupiConnect;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -44,12 +45,6 @@ public class ModuleRegistry {
         return modules;
     }
 
-    {
-        // FIXME: 01/12/15 Move that to application initialization (cause that would be prettier)
-        modules.add(new MgupiConnect());
-        modules.add(new MetroConnect());
-    }
-
     public static class Plugin {
         Class<? extends WifiLoginModule> module;
         public String version_url;
@@ -74,10 +69,14 @@ public class ModuleRegistry {
         File from;
     }
 
-    public List<ModuleLoadInfo> loadModule(File... jars) throws IOException {
+    public List<ModuleLoadInfo> loadModule(File... jars) {
         URL[] jar_urls = new URL[jars.length];
         for (int i = 0; i < jars.length; i++)
-            jar_urls[i] = jars[i].toURI().toURL();
+            try {
+                jar_urls[i] = jars[i].toURI().toURL();
+            } catch (MalformedURLException e) {
+                throw new RuntimeException("Something stupid happened with urls", e);
+            }
 
         final URLClassLoader classLoader = new URLClassLoader(jar_urls);
         final List<ModuleLoadInfo> loadData = new ArrayList<>(jars.length);
@@ -94,8 +93,14 @@ public class ModuleRegistry {
                 continue;
             }
 
-            final JarFile jar = new JarFile(jarFile);
-            final Manifest manifest = jar.getManifest();
+            final JarFile jar;
+            final Manifest manifest;
+            try {
+                manifest = (jar = new JarFile(jarFile)).getManifest();
+            } catch (IOException e) {
+                Log.e("PluginManager", "Something stupid had happened with jar, skipping it", e);
+                continue;
+            }
 
             // Checking if manifest is present
             loadData.add(moduleLoadInfo);
@@ -152,14 +157,18 @@ public class ModuleRegistry {
             final JarEntry descriptionFile = jar.getJarEntry(DESC_FILE);
             if (descriptionFile != null) {
                 StringBuilder description = new StringBuilder();
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(jar.getInputStream(descriptionFile))
-                );
+                try {
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(jar.getInputStream(descriptionFile))
+                    );
 
-                String line;
-                while ((line = reader.readLine()) != null)
-                    description.append(line).append('\n');
-                reader.close();
+                    String line;
+                    while ((line = reader.readLine()) != null)
+                        description.append(line).append('\n');
+                    reader.close();
+                } catch (IOException e) {
+                    Log.e("PluginManager", "Something stupid had happened with description, assuming it's empty", e);
+                }
 
                 plugin.info = description.toString();
             }
