@@ -30,7 +30,7 @@ class AndroidWifiInfo implements WifiLoginModule.WifiContextInfo {
     public AndroidWifiInfo(WifiInfo connectionInfo) {
         this.bssid = connectionInfo.getBSSID();
         this.ssid = connectionInfo.getSSID();
-        if (ssid.contains("\""))
+        if (ssid.contains("\"")) // SSID string specification in android is rather strange :\
             ssid = ssid().substring(1, ssid.length() - 1);
         this.mac = connectionInfo.getMacAddress();
     }

@@ -50,7 +50,7 @@ public class Butler {
         scheduledRepeater = new TimerTask() {
             @Override
             public void run() {
-                Log.v(TAG, "Repeat delay has passed, relaunching ");
+                Log.v(TAG, "Repeat delay has passed, relaunching " + module.getClass());
                 try {
                     module.handle(info, log);
                 } catch (Exception e) {
@@ -77,19 +77,25 @@ public class Butler {
             }
         } else {
 
-            final WifiLoginModule.WifiContextInfo info = new AndroidWifiInfo(manager.getConnectionInfo());
-            final Handler handler = new Handler(Looper.getMainLooper());
-
             final List<WifiLoginModule> ways = new LinkedList<>();
-            for (WifiLoginModule way : ModuleRegistry.getInstance().getModules())
-                if (way.canHandle(info) > 0)
-                    ways.add(way);
 
+            final Handler handler = new Handler(Looper.getMainLooper());
+            final List<Plugin> plugins = PluginManager.getInstance().getPlugins();
+            final WifiLoginModule.WifiContextInfo info = new AndroidWifiInfo(manager.getConnectionInfo());
+
+            System.out.println("New connection detected, checking " + plugins.size() + " loaded plugin(s)");
+
+            for (Plugin plugin : plugins)
+                if (plugin.module.canHandle(info) > 0)
+                    ways.add(plugin.module);
+
+            // TODO: Add plugin availability checking in repository
             if (ways.isEmpty()) {
                 Log.v(TAG, "New connection detected, but either it's open, " +
                         "or we've not equipped properly to deal with it.");
                 return;
             }
+
             // Sorting in descending order
             Collections.sort(ways, new Comparator<WifiLoginModule>() {
                 @Override
@@ -155,6 +161,6 @@ public class Butler {
     public void initialize(Context ctx) {
         final File file = new File(Environment.getExternalStorageDirectory(), "WiFu Plugins");
         file.mkdir();
-        ModuleRegistry.getInstance().loadModule(file.listFiles());
+        PluginManager.getInstance().loadModule(file.listFiles());
     }
 }

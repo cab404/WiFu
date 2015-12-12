@@ -2,7 +2,6 @@ package com.cab404.wifu.android;
 
 import android.app.Application;
 
-import com.cab404.wifu.base.WifiLoginModule;
 import com.cab404.wifu.modules.MetroConnect;
 import com.cab404.wifu.modules.MgupiConnect;
 
@@ -22,8 +21,16 @@ public class App extends Application {
         super.onCreate();
         Butler.getInstance().initialize(this);
 
-        final List<WifiLoginModule> modules = ModuleRegistry.getInstance().getModules();
-        modules.add(new MgupiConnect());
-        modules.add(new MetroConnect());
+        final List<Plugin> plugins = PluginManager.getInstance().getPlugins();
+        Plugin mgupi = new Plugin();
+        mgupi.module = new MgupiConnect();
+        mgupi.name = "MGUPI-WiFi";
+        plugins.add(mgupi);
+
+        Plugin metro = new Plugin();
+        metro.module = new MetroConnect();
+        metro.name = "MosMetro_Free";
+        plugins.add(metro);
+
     }
 }

@@ -131,6 +131,9 @@ public class MetroConnect implements WifiLoginModule {
 
     @Override
     public int canHandle(WifiContextInfo info) {
+        System.out.println(info.ssid());
+        System.out.println("MosMetro_Free");
+        System.out.println("MosMetro_Free".equals(info.ssid()));
         return "MosMetro_Free".equals(info.ssid()) ? 100 : 0;
     }
 }

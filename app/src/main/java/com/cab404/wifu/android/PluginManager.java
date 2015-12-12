@@ -8,6 +8,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -25,7 +26,7 @@ import java.util.jar.Manifest;
  *
  * @author cab404
  */
-public class ModuleRegistry {
+public class PluginManager {
 
     private static final String MKEY_TITLE = "WifuModule-Title";
     private static final String MKEY_VERSION = "WifuModule-Version";
@@ -33,25 +34,16 @@ public class ModuleRegistry {
     private static final String MKEY_UPDATE_URL = "WifuModule-UpdateUrl";
     private static final String MKEY_VERSION_URL = "WifuModule-VersionUrl";
     private static final String DESC_FILE = "description.txt";
-    private static ModuleRegistry instance = new ModuleRegistry();
+    private static PluginManager instance = new PluginManager();
 
-    public static ModuleRegistry getInstance() {
+    public static PluginManager getInstance() {
         return instance;
     }
 
-    private final List<WifiLoginModule> modules = new ArrayList<>();
+    private final List<Plugin> modules = new ArrayList<>();
 
-    public List<WifiLoginModule> getModules() {
+    public List<Plugin> getPlugins() {
         return modules;
-    }
-
-    public static class Plugin {
-        Class<? extends WifiLoginModule> module;
-        public String version_url;
-        public String update_url;
-        public String name;
-        public String info;
-        public int version;
     }
 
     public static class ModuleLoadInfo {
@@ -61,11 +53,11 @@ public class ModuleRegistry {
             FAIL_CLASS_NOT_FOUND,
             FAIL_CORRUPTED_MANIFEST,
             FAIL_CLASS_IS_NOT_MODULE,
-            FAIL_CLASS_HAS_NO_DEFAULT_CONSTRUCTOR
+            FAIL_DEFAULT_CONSTRUCTOR_IS_HIDDEN, FAIL_INSTATINATION_FAILED, FAIL_CANNOT_INVOKE_CONSTRUCTOR, FAIL_CLASS_HAS_NO_DEFAULT_CONSTRUCTOR
         }
 
         LoadStatus status;
-        Plugin loaded;
+        Plugin plugin;
         File from;
     }
 
@@ -116,14 +108,14 @@ public class ModuleRegistry {
                 continue;
             }
 
-            Plugin plugin = moduleLoadInfo.loaded = new Plugin();
+            Plugin plugin = moduleLoadInfo.plugin = new Plugin();
 
             // Loading module itself
             try {
                 Class moduleClass = classLoader.loadClass(attrs.getValue(MKEY_MODULE_CLASS));
                 if (WifiLoginModule.class.isAssignableFrom(moduleClass))
                     //noinspection unchecked
-                    plugin.module = moduleClass;
+                    plugin.module = (WifiLoginModule) moduleClass.getConstructor().newInstance();
                 else {
                     moduleLoadInfo.status = ModuleLoadInfo.LoadStatus.FAIL_CLASS_IS_NOT_MODULE;
                     continue;
@@ -135,6 +127,15 @@ public class ModuleRegistry {
                 continue;
             } catch (NoSuchMethodException e) {
                 moduleLoadInfo.status = ModuleLoadInfo.LoadStatus.FAIL_CLASS_HAS_NO_DEFAULT_CONSTRUCTOR;
+                continue;
+            } catch (InvocationTargetException e) {
+                moduleLoadInfo.status = ModuleLoadInfo.LoadStatus.FAIL_CANNOT_INVOKE_CONSTRUCTOR;
+                continue;
+            } catch (InstantiationException e) {
+                moduleLoadInfo.status = ModuleLoadInfo.LoadStatus.FAIL_INSTATINATION_FAILED;
+                continue;
+            } catch (IllegalAccessException e) {
+                moduleLoadInfo.status = ModuleLoadInfo.LoadStatus.FAIL_DEFAULT_CONSTRUCTOR_IS_HIDDEN;
                 continue;
             }
 
@@ -174,6 +175,10 @@ public class ModuleRegistry {
             }
 
         }
+
+        for (ModuleLoadInfo info : loadData)
+            if (info.status == ModuleLoadInfo.LoadStatus.SUCCESS)
+                modules.add(info.plugin);
 
         return loadData;
 
