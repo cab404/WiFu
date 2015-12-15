@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">WiFu</string>
-    <string name="failure">%s: failed to connect</string>
-    <string name="logged_in">%s: successfully connected</string>
+    <string name="failure">%s: не вышло подключится</string>
+    <string name="logged_in">%s: успешно подключились</string>
     <string name="textwall">Тут будут плагины (если эта штука будет более-менее кому-то нужна), но пока здесь только эта стена текста.
 \n\n
 Эту штуку не надо включать, она работает сама.

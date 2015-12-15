@@ -1,6 +1,7 @@
 package com.cab404.wifu.android;
 
 import android.content.Context;
+import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.os.Handler;
@@ -66,24 +67,36 @@ public class Butler {
     }
 
 
+    String bssid = null;
     public void onNetworkStatusUpdate(final Context ctx) {
         WifiManager manager = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
 
-        if (manager.getConnectionInfo().getNetworkId() == -1) {
+        final boolean connected
+                =
+                SupplicantState.COMPLETED.equals(manager.getConnectionInfo().getSupplicantState())
+                &&
+                manager.getConnectionInfo().getNetworkId() != -1;
+
+        if (!connected) {
             if (scheduledRepeater != null) {
                 Log.v(TAG, "Disconnected from network, cancelling previous login task.");
                 scheduledRepeater.cancel();
                 scheduledRepeater = null;
             }
+            bssid = null;
         } else {
 
-            final List<WifiLoginModule> ways = new LinkedList<>();
+            final WifiLoginModule.WifiContextInfo info = new AndroidWifiInfo(manager.getConnectionInfo());
+            if (info.bssid().equals(bssid))
+                return;
+            bssid = info.bssid();
 
+            final List<WifiLoginModule> ways = new LinkedList<>();
             final Handler handler = new Handler(Looper.getMainLooper());
             final List<Plugin> plugins = PluginManager.getInstance().getPlugins();
-            final WifiLoginModule.WifiContextInfo info = new AndroidWifiInfo(manager.getConnectionInfo());
 
             System.out.println("New connection detected, checking " + plugins.size() + " loaded plugin(s)");
+
 
             for (Plugin plugin : plugins)
                 if (plugin.module.canHandle(info) > 0)
@@ -110,6 +123,10 @@ public class Butler {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
+
+                    // First let's check, if we can go thru
+
+
                     Log.v(TAG, "Starting dispatching thread for " + info.ssid());
                     Log.v(TAG, "Got " + ways.size() + " module(s) to try");
 
