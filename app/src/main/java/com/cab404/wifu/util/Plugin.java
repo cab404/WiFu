@@ -1,6 +1,6 @@
-package com.cab404.wifu.android;
+package com.cab404.wifu.util;
 
-import com.cab404.wifu.base.WifiLoginModule;
+import com.cab404.wifu.core.WifiLoginModule;
 
 /**
  * Well, sorry for no comments here!

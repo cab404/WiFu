@@ -4,7 +4,7 @@ import android.net.wifi.WifiInfo;
 
 import java.io.PrintWriter;
 
-import com.cab404.wifu.base.WifiLoginModule;
+import com.cab404.wifu.core.WifiLoginModule;
 
 /**
  * Well, sorry for no comments here!

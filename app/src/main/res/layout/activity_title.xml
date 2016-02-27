@@ -8,5 +8,6 @@
         android:layout_height="wrap_content"
         android:text="@string/textwall"
         android:gravity="center"
-        android:padding="5dp" />
+        android:padding="5dp"
+        android:id="@+id/text" />
 </ScrollView>

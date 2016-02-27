@@ -2,10 +2,15 @@ package com.cab404.wifu.android;
 
 import android.app.Application;
 
+import com.cab404.wifu.modules.BeelineFreeConnect;
 import com.cab404.wifu.modules.MetroConnect;
 import com.cab404.wifu.modules.MgupiConnect;
+import com.cab404.wifu.util.Butler;
+import com.cab404.wifu.util.PluginManager;
 
+import java.io.File;
 import java.util.List;
+import java.util.logging.LogManager;
 
 /**
  * Well, sorry for no comments here!
@@ -19,18 +24,18 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Butler.getInstance().initialize(this);
 
-        final List<Plugin> plugins = PluginManager.getInstance().getPlugins();
-        Plugin mgupi = new Plugin();
-        mgupi.module = new MgupiConnect();
-        mgupi.name = "MGUPI-WiFi";
-        plugins.add(mgupi);
+        final File logs = new File(getFilesDir(), "logs");
+        logs.mkdirs();
+        AndroidLogManager.init(logs);
 
-        Plugin metro = new Plugin();
-        metro.module = new MetroConnect();
-        metro.name = "MosMetro_Free";
-        plugins.add(metro);
+        Butler.getInstance().setLog(AndroidLogManager.getInstance());
+
+        final PluginManager manager = PluginManager.getInstance();
+
+        manager.addModule("MGUPI-WiFi", new MgupiConnect());
+        manager.addModule("MosMetro_Free", new MetroConnect());
+        manager.addModule("Beeline_WiFi_Free", new BeelineFreeConnect());
 
     }
 }

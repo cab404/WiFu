@@ -1,8 +1,6 @@
-package com.cab404.wifu.android;
+package com.cab404.wifu.util;
 
-import android.util.Log;
-
-import com.cab404.wifu.base.WifiLoginModule;
+import com.cab404.wifu.core.WifiLoginModule;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -40,10 +38,10 @@ public class PluginManager {
         return instance;
     }
 
-    private final List<Plugin> modules = new ArrayList<>();
+    private final List<Plugin> plugins = new ArrayList<>();
 
     public List<Plugin> getPlugins() {
-        return modules;
+        return plugins;
     }
 
     public static class ModuleLoadInfo {
@@ -53,12 +51,22 @@ public class PluginManager {
             FAIL_CLASS_NOT_FOUND,
             FAIL_CORRUPTED_MANIFEST,
             FAIL_CLASS_IS_NOT_MODULE,
-            FAIL_DEFAULT_CONSTRUCTOR_IS_HIDDEN, FAIL_INSTATINATION_FAILED, FAIL_CANNOT_INVOKE_CONSTRUCTOR, FAIL_CLASS_HAS_NO_DEFAULT_CONSTRUCTOR
+            FAIL_DEFAULT_CONSTRUCTOR_IS_HIDDEN,
+            FAIL_INSTATINATION_FAILED,
+            FAIL_CANNOT_INVOKE_CONSTRUCTOR,
+            FAIL_CLASS_HAS_NO_DEFAULT_CONSTRUCTOR
         }
 
         LoadStatus status;
         Plugin plugin;
         File from;
+    }
+
+    public void addModule(String name, WifiLoginModule module){
+        Plugin plugin = new Plugin();
+        plugin.name = name;
+        plugin.module = module;
+        plugins.add(plugin);
     }
 
     public List<ModuleLoadInfo> loadModule(File... jars) {
@@ -90,7 +98,6 @@ public class PluginManager {
             try {
                 manifest = (jar = new JarFile(jarFile)).getManifest();
             } catch (IOException e) {
-                Log.e("PluginManager", "Something stupid had happened with jar, skipping it", e);
                 continue;
             }
 
@@ -167,8 +174,7 @@ public class PluginManager {
                     while ((line = reader.readLine()) != null)
                         description.append(line).append('\n');
                     reader.close();
-                } catch (IOException e) {
-                    Log.e("PluginManager", "Something stupid had happened with description, assuming it's empty", e);
+                } catch (IOException ignored) {
                 }
 
                 plugin.info = description.toString();
@@ -178,7 +184,7 @@ public class PluginManager {
 
         for (ModuleLoadInfo info : loadData)
             if (info.status == ModuleLoadInfo.LoadStatus.SUCCESS)
-                modules.add(info.plugin);
+                plugins.add(info.plugin);
 
         return loadData;
 
