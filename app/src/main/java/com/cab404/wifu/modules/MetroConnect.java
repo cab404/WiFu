@@ -49,21 +49,21 @@ public class MetroConnect implements WifiLoginModule {
         }
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(main_page.getErrorStream()));
-        String url = null;
+//        String url = null;
         String payload = null;
         String next;
 
         while ((next = reader.readLine()) != null){
             if (next.contains("csrf.sign"))
                 payload = next;
-            if (next.contains("meta http-equiv=\"refresh\""))
-                url = next;
-            if (payload != null && url != null)
+//            if (next.contains("meta http-equiv=\"refresh\""))
+//                url = next;
+            if (payload != null/* && url != null*/)
                 break;
         }
 
         if (payload == null) throw new RuntimeException("CSRF not found!");
-        if (url == null) throw new RuntimeException("URL not found!");
+//        if (url == null) throw new RuntimeException("URL not found!");
 
         // Some assembly required, may (and will) break on template changes
         payload = "promogoto=&IDButton=Confirm"
@@ -74,17 +74,17 @@ public class MetroConnect implements WifiLoginModule {
                 .replace("\" value=\"", "=")
                 .trim();
 
-        url = SU.sub(url, "URL=", "\"");
-        String pre = "https://login.wi-fi.ru/am/UI/Login" + url;
-        String post = "http://login.wi-fi.ru/am/UI/Login" + url;
+
+//        url = SU.sub(url, "URL=", "\"");
+//        String pre = "https://login.wi-fi.ru/am/UI/Login" + url;
+//        String post = "http://login.wi-fi.ru/am/UI/Login" + url;
 
 //        // Now checking out cookies
 //        String cookie = String.valueOf(NetUtils.buildCookies(main_page));
-//        cookie = cookie.replaceFirst("geo-line-id=..; ", "");
 //        cookie = "device=desktop; " + cookie;
 
         // Requesting
-        HttpURLConnection login = (HttpURLConnection) new URL(post).openConnection();
+        HttpURLConnection login = (HttpURLConnection) new URL(location).openConnection();
         login.setRequestMethod("POST");
         login.setDefaultUseCaches(false);
         login.setUseCaches(false);
@@ -92,12 +92,12 @@ public class MetroConnect implements WifiLoginModule {
         login.setDoInput(true);
 
         login.setRequestProperty("Host", "login.wi-fi.ru");
-        login.setRequestProperty("Referer", post);
+        login.setRequestProperty("Referer", location);
         login.setRequestProperty("Accept", "*/*");
         login.setRequestProperty("Cookie", "device=desktop");
         login.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         login.setRequestProperty("Content-Length", payload.length() + "");
-
+        System.out.println(payload.length());
         // And payload
         PrintWriter writer = new PrintWriter(login.getOutputStream());
         writer.write(payload);

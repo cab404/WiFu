@@ -8,8 +8,8 @@ android {
         applicationId "ru.cab404.wifu"
         minSdkVersion 7
         targetSdkVersion 23
-        versionCode 5
-        versionName "1.4"
+        versionCode 7
+        versionName "1.42"
     }
     buildTypes {
         release {
